@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Components/BoxComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 
 #include "Ball.generated.h"
@@ -18,12 +18,15 @@ public:
 	// Sets default values for this actor's properties
 	ABall();
 
-private:
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	UStaticMeshComponent* BallBody;
 
+	UPROPERTY(EditDefaultsOnly)
+	float BallSpeed = 2000;
+
+private:
 	UPROPERTY(VisibleAnywhere)
-	UBoxComponent* CollisionBox;
+	UCapsuleComponent* CollisionCapsule;
 
 	UPROPERTY(VisibleAnywhere)
 	UProjectileMovementComponent* MovementComponent;
@@ -32,10 +35,10 @@ private:
 	FVector InitialDirection;
 
 	FVector BallVelocity;
-	float BallSpeed;
+	bool isReflecting;
 
 	UFUNCTION()
-	void OnBeingOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	void OnBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 protected:
 	// Called when the game starts or when spawned

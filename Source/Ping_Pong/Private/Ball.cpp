@@ -2,43 +2,68 @@
 
 
 #include "Ball.h"
+#include "Wall.h"
+#include "PaddlePawn.h"
 
 // Sets default values
 ABall::ABall()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+	bReplicates = true;
+	SetReplicateMovement(true);
 
 	BallBody = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BallBody"));
 	RootComponent = BallBody;
 
-	MovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("MovementComponent"));
-	MovementComponent->bShouldBounce = true;
-	MovementComponent->Bounciness = 1.0f;
-	MovementComponent->Friction = 0.0f;
-	MovementComponent->ProjectileGravityScale = 0.0f;
+	CollisionCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CollisionCapsule"));
+	CollisionCapsule->SetupAttachment(BallBody);
 
-	/*CollisionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("CollisionBox"));
-	CollisionBox->SetupAttachment(BallBody);
+	CollisionCapsule->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	CollisionCapsule->SetCollisionObjectType(ECollisionChannel::ECC_WorldStatic);
+	CollisionCapsule->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
 
-	CollisionBox->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-	CollisionBox->SetCollisionObjectType(ECollisionChannel::ECC_PhysicsBody);
-	CollisionBox->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
-	CollisionBox->SetNotifyRigidBodyCollision(true);
-
-	CollisionBox->SetSimulatePhysics(true);
-
-	CollisionBox->OnComponentBeginOverlap.AddDynamic(this, &ABall::OnBeingOverlap);
-
-	BallSpeed = 1000.0f;
-	BallVelocity = FVector::ZeroVector;*/
+	CollisionCapsule->OnComponentBeginOverlap.AddDynamic(this, &ABall::OnBeginOverlap);
 }
 
-void ABall::OnBeingOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+// Called when the game starts or when spawned
+void ABall::BeginPlay()
 {
-	// Not working because SweepResult isn't populated
-	BallVelocity = FVector::VectorPlaneProject(BallVelocity, SweepResult.Normal);
-	BallVelocity = BallVelocity.MirrorByVector(SweepResult.Normal);
+	Super::BeginPlay();
+
+	InitialPosition = GetActorLocation();
+	InitialDirection = GetActorForwardVector();
+
+	FBox LocalBoundingBox = BallBody->GetStaticMesh()->GetBoundingBox();
+	FVector BoxExtent = LocalBoundingBox.GetExtent();
+	float Radius = FMath::Max(BoxExtent.X, BoxExtent.Y);
+	float HalfHeight = BoxExtent.Z;
+
+	CollisionCapsule->SetCapsuleSize(Radius, HalfHeight);
+}
+
+void ABall::OnBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (isReflecting)
+		return;
+
+	isReflecting = true;
+
+	if (OtherActor && OtherActor->IsA<AWall>())
+	{
+		auto wall = Cast<AWall>(OtherActor);
+		float rotation = FMath::DegreesToRadians(wall->GetRotation());
+
+		FVector Normal = FVector(FMath::Cos(rotation), FMath::Sin(rotation), 0.0f).GetSafeNormal();
+
+		float DotProduct = FVector::DotProduct(BallVelocity, Normal);
+
+		BallVelocity = BallVelocity - 2 * DotProduct * Normal;
+	}
+	else if(OtherActor && OtherActor->IsA<APaddlePawn>())
+	{
+		BallVelocity.X = -BallVelocity.X;
+	}
 }
 
 void ABall::ResetBall()
@@ -49,37 +74,19 @@ void ABall::ResetBall()
 	FVector LaunchDirection = Rotation.RotateVector(InitialDirection);
 
 	LaunchDirection.Normalize();
-	BallVelocity = LaunchDirection * MovementComponent->MaxSpeed;
 
-	//BallVelocity = LaunchDirection * BallSpeed;
-
-	// Use movement component for now
-	MovementComponent->Velocity = BallVelocity;
+	BallVelocity = LaunchDirection * BallSpeed;
 
 	SetActorLocation(InitialPosition);
-}
-
-// Called when the game starts or when spawned
-void ABall::BeginPlay()
-{
-	Super::BeginPlay();
-
-	InitialPosition = GetActorLocation();
-	InitialDirection = GetActorForwardVector();
-	
-	/*FBox LocalBoundingBox = BallBody->GetStaticMesh()->GetBoundingBox();
-	FVector BoxExtent = LocalBoundingBox.GetExtent();
-	CollisionBox->SetBoxExtent(BoxExtent);*/
-
-	ResetBall();
+	ForceNetUpdate();
 }
 
 // Called every frame
 void ABall::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-	/*FVector NewLocation = GetActorLocation() + BallVelocity * DeltaTime;
-	SetActorLocation(NewLocation);*/
+	FVector NewLocation = GetActorLocation() + BallVelocity * DeltaTime;
+	SetActorLocation(NewLocation);
+	isReflecting = false;
 }
 

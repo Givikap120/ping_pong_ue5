@@ -15,12 +15,14 @@ AWall::AWall()
 	CollisionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("CollisionBox"));
 	CollisionBox->SetupAttachment(StaticMeshComponent);
 
-	CollisionBox->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	CollisionBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	CollisionBox->SetCollisionObjectType(ECollisionChannel::ECC_WorldStatic);
+	CollisionBox->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
+
+	/*CollisionBox->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	CollisionBox->SetCollisionObjectType(ECollisionChannel::ECC_PhysicsBody);
 	CollisionBox->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
-	CollisionBox->SetNotifyRigidBodyCollision(true);
-
-	//CollisionBox->SetSimulatePhysics(true);
+	CollisionBox->SetNotifyRigidBodyCollision(true);*/
 }
 
 // Called when the game starts or when spawned
@@ -37,6 +39,13 @@ void AWall::BeginPlay()
 void AWall::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+}
 
+float AWall::GetRotation() const
+{
+	FRotator Rotation = GetActorRotation();
+	Rotation.Yaw += 90.0f;
+	Rotation.Normalize();
+	return Rotation.Yaw;
 }
 

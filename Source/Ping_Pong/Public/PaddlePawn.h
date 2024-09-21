@@ -20,16 +20,27 @@ public:
 	APaddlePawn();
 
 private:
+	float velocity;
+	FVector startingPosition;
+
 	UPROPERTY(EditDefaultsOnly)
 	UStaticMeshComponent* PaddleBody;
 
 	UPROPERTY(EditDefaultsOnly)
 	UBoxComponent* CollisionBox;
 
-	UPROPERTY(VisibleAnywhere)
-	UFloatingPawnMovement* MovementComponent;
+	void ActivateEnchancedInput();
 
-	void Move(const FInputActionValue& action);
+	UFUNCTION(Server, Reliable)
+	void ServerGetCamera();
+
+	UFUNCTION(Client, Reliable)
+	void ClientSetCamera(APlayerController* activeController, ACameraActor* camera);
+
+	UFUNCTION(Server, Reliable)
+	void ServerMove(float newVelocity);
+
+	void Move(const FInputActionValue& Action);
 
 protected:
 	// Called when the game starts or when spawned
@@ -48,4 +59,13 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	UInputAction* ActionMove;
+
+	UPROPERTY(EditDefaultsOnly)
+	float MaxSpeed = 1000;
+
+	UPROPERTY(EditDefaultsOnly)
+	float RangeForMovement = 900;
+
+	UPROPERTY(EditDefaultsOnly)
+	int PlayerID;
 };
