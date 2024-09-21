@@ -14,15 +14,6 @@ AWall::AWall()
 
 	CollisionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("CollisionBox"));
 	CollisionBox->SetupAttachment(StaticMeshComponent);
-
-	CollisionBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	CollisionBox->SetCollisionObjectType(ECollisionChannel::ECC_WorldStatic);
-	CollisionBox->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
-
-	/*CollisionBox->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-	CollisionBox->SetCollisionObjectType(ECollisionChannel::ECC_PhysicsBody);
-	CollisionBox->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
-	CollisionBox->SetNotifyRigidBodyCollision(true);*/
 }
 
 // Called when the game starts or when spawned
@@ -33,12 +24,6 @@ void AWall::BeginPlay()
 	FBox LocalBoundingBox = StaticMeshComponent->GetStaticMesh()->GetBoundingBox();
 	FVector BoxExtent = LocalBoundingBox.GetExtent();
 	CollisionBox->SetBoxExtent(BoxExtent);
-}
-
-// Called every frame
-void AWall::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
 }
 
 float AWall::GetRotation() const

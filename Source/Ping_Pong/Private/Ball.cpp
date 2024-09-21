@@ -19,10 +19,6 @@ ABall::ABall()
 	CollisionCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CollisionCapsule"));
 	CollisionCapsule->SetupAttachment(BallBody);
 
-	CollisionCapsule->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	CollisionCapsule->SetCollisionObjectType(ECollisionChannel::ECC_WorldStatic);
-	CollisionCapsule->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
-
 	CollisionCapsule->OnComponentBeginOverlap.AddDynamic(this, &ABall::OnBeginOverlap);
 }
 

@@ -20,10 +20,6 @@ APaddlePawn::APaddlePawn()
 
 	CollisionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("CollisionBox"));
 	CollisionBox->SetupAttachment(PaddleBody);
-
-	CollisionBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	CollisionBox->SetCollisionObjectType(ECollisionChannel::ECC_WorldStatic);
-	CollisionBox->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
 }
 
 // Called when the game starts or when spawned

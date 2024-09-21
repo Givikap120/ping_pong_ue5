@@ -13,10 +13,6 @@ AGoalTrigger::AGoalTrigger()
     GoalZone = CreateDefaultSubobject<UBoxComponent>(TEXT("GoalZone"));
     RootComponent = GoalZone;
 
-    GoalZone->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-    GoalZone->SetCollisionObjectType(ECollisionChannel::ECC_WorldStatic);
-    GoalZone->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
-
     GoalZone->OnComponentBeginOverlap.AddDynamic(this, &AGoalTrigger::OnOverlapBegin);
 }
 
@@ -24,7 +20,6 @@ void AGoalTrigger::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* O
 {
     if (OtherActor && OtherActor->IsA<ABall>())
     {
-        //UE_LOG(LogTemp, Warning, TEXT("Goal Scored! PlayerID = %d"), PlayerID);
         OnGoalScored.Broadcast(PlayerID);
     }
 }
